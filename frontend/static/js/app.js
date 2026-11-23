@@ -63,7 +63,8 @@ document.addEventListener('visibilitychange', () => {
 class StreamView {
   constructor(streamId, img, { onFrame, onState, emptyEl } = {}) {
     this.img = img; this.onFrame = onFrame; this.emptyEl = emptyEl; this.onState = onState;
-    this.path = `/api/ws/stream/${encodeURIComponent(streamId)}`;
+    // client=2 marks a dashboard that honours the view limit (the server refuses older ones).
+    this.path = `/api/ws/stream/${encodeURIComponent(streamId)}?client=2`;
     this.paused = false; this.suspended = false;
     LIVE_VIEWS.add(this);
     if (document.hidden) this.suspended = true; else this.connect();

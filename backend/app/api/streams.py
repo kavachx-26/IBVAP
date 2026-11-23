@@ -56,6 +56,12 @@ async def _pump(websocket: WebSocket, worker) -> None:
 
 @router.websocket("/api/ws/stream/{stream_id}")
 async def ws_stream(websocket: WebSocket, stream_id: str):
+    if VIEW_LIMIT_S > 0 and websocket.query_params.get("client") != "2":
+        # A dashboard tab from before the view limit existed reconnects after
+        # every pause and would stream forever. Refuse it at the handshake
+        # (no frames sent; its retries back off to one tiny request per 8 s).
+        await websocket.close(code=4426)
+        return
     await websocket.accept()
     worker = manager.get(stream_id)
     if worker is None:
