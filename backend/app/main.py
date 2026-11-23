@@ -125,7 +125,16 @@ for r in (streams.router, incidents.router, intel.router, audit.router, analytic
     app.include_router(r)
 
 if (FRONTEND_DIR / "static").exists():
-    app.mount("/static", StaticFiles(directory=FRONTEND_DIR / "static"), name="static")
+    class _RevalidatedStatic(StaticFiles):
+        """Browsers must revalidate the dashboard code (a cheap 304 via ETag),
+        so a redeploy reaches every open browser instead of a stale cache."""
+
+        async def get_response(self, path, scope):
+            resp = await super().get_response(path, scope)
+            resp.headers["Cache-Control"] = "no-cache"
+            return resp
+
+    app.mount("/static", _RevalidatedStatic(directory=FRONTEND_DIR / "static"), name="static")
 
 
 @app.get("/", include_in_schema=False)

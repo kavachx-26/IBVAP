@@ -33,6 +33,10 @@ PAUSE_CODE = 4408  # the dashboard shows "click to resume" and does not auto-rec
 async def _pump(websocket: WebSocket, worker) -> None:
     q = worker.subscribe()
     deadline = time.monotonic() + VIEW_LIMIT_S if VIEW_LIMIT_S > 0 else None
+    if deadline:
+        # The dashboard runs its own timer from this, so the pause does not
+        # depend on the close frame surviving a proxy.
+        await websocket.send_json({"type": "hello", "view_limit_s": VIEW_LIMIT_S})
     try:
         while True:
             text = await q.get()

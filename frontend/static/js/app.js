@@ -79,10 +79,19 @@ class StreamView {
       if (m.jpeg_b64) this.img.src = 'data:image/jpeg;base64,' + m.jpeg_b64;
       if (this.emptyEl) this.emptyEl.style.display = 'none';
       this.onFrame?.(m);
+    } else if (m.type === 'hello' && m.view_limit_s > 0) {
+      // Client-side timer: pauses on time even if a proxy swallows the server's pause.
+      clearTimeout(this.limitTimer);
+      this.limitTimer = setTimeout(() => this.pauseNow(), m.view_limit_s * 1000);
     } else if (m.type === 'paused') {
       // Proxies may replace the 4408 close code, so the message itself pauses.
-      this.sock?.close(); this.sock = null; this.showPaused();
+      this.pauseNow();
     } else if (m.type === 'done' || m.type === 'error') this.onFrame?.(m);
+  }
+  pauseNow() {
+    clearTimeout(this.limitTimer);
+    if (this.paused) return;
+    this.sock?.close(); this.sock = null; this.showPaused();
   }
   showPaused() {
     this.paused = true;
@@ -99,9 +108,9 @@ class StreamView {
     this.paused = false;
     if (!document.hidden) this.connect(); else this.suspended = true;
   }
-  suspend() { if (this.sock && !this.paused) { this.sock.close(); this.sock = null; this.suspended = true; } }
+  suspend() { if (this.sock && !this.paused) { clearTimeout(this.limitTimer); this.sock.close(); this.sock = null; this.suspended = true; } }
   wake() { if (this.suspended && !this.paused) { this.suspended = false; this.connect(); } }
-  close() { LIVE_VIEWS.delete(this); this.sock?.close(); this.sock = null; }
+  close() { clearTimeout(this.limitTimer); LIVE_VIEWS.delete(this); this.sock?.close(); this.sock = null; }
 }
 
 // ------------------------------------------------------------------ router
