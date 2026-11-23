@@ -4,7 +4,7 @@
 
 Team **KavachX** (Swastik Mitra, Sunanda Samanta). CodeQuest: National Tech Hackathon 2026, Final Build & Innovation Showcase.
 
-> **Live demo:** deploying on Render (link added here shortly) &nbsp;|&nbsp; **Demo video:** [youtu.be/ygBbFJ7840Q](https://youtu.be/ygBbFJ7840Q)
+> **Live demo:** [ibvap-epfs.onrender.com](https://ibvap-epfs.onrender.com/) &nbsp;|&nbsp; **Demo video:** [youtu.be/ygBbFJ7840Q](https://youtu.be/ygBbFJ7840Q)
 >
 > The live demo runs on Render's free plan: it sleeps after 15 minutes idle, so the first visit takes about a minute to wake.
 
