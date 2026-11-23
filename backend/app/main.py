@@ -19,13 +19,14 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import time
 from contextlib import asynccontextmanager
 from urllib.parse import parse_qs
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from app.api import analytics, audit, incidents, intel, streams
@@ -135,11 +136,18 @@ if (FRONTEND_DIR / "static").exists():
             return resp
 
     app.mount("/static", _RevalidatedStatic(directory=FRONTEND_DIR / "static"), name="static")
+    # The page loads its code from a per-start path (/static-<BUILD>/...), so a
+    # browser holding a cached copy from an older deploy cannot reuse it; the
+    # ES-module imports inside are relative and follow the same path.
+    BUILD = str(int(time.time()))
+    app.mount(f"/static-{BUILD}", _RevalidatedStatic(directory=FRONTEND_DIR / "static"), name="static-build")
 
 
 @app.get("/", include_in_schema=False)
 def index():
     page = FRONTEND_DIR / "index.html"
     if page.exists():
-        return FileResponse(page, headers={"Cache-Control": "no-cache"})
+        html = page.read_text(encoding="utf-8")
+        html = html.replace('href="/static/', f'href="/static-{BUILD}/').replace('src="/static/', f'src="/static-{BUILD}/')
+        return HTMLResponse(html, headers={"Cache-Control": "no-cache"})
     return JSONResponse({"detail": "Frontend not bundled. API docs at /docs."}, status_code=404)
