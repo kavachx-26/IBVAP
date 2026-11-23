@@ -79,6 +79,9 @@ class StreamView {
       if (m.jpeg_b64) this.img.src = 'data:image/jpeg;base64,' + m.jpeg_b64;
       if (this.emptyEl) this.emptyEl.style.display = 'none';
       this.onFrame?.(m);
+    } else if (m.type === 'paused') {
+      // Proxies may replace the 4408 close code, so the message itself pauses.
+      this.sock?.close(); this.sock = null; this.showPaused();
     } else if (m.type === 'done' || m.type === 'error') this.onFrame?.(m);
   }
   showPaused() {
